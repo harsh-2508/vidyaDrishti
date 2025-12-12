@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+/server/node_modules/
+/client/node_modules/
+/frontend/node_modules/
+
+# Environment variables (SECRETS)
+.env
+/server/.env
+
+# Build outputs
+/client/dist/
+/client/build/
+/frontend/dist/
+
+# System files
+.DS_Store
