@@ -228,6 +228,8 @@ export const getClassReport = async (req, res) => {
     const recordsMap = new Map();
     records.forEach((record) => recordsMap.set(record.student.toString(), record));
 
+   // ... inside getClassReport ...
+
     const fullReport = currentClass.students.map((student) => {
       const record = recordsMap.get(student._id.toString());
       return record ? {
@@ -235,12 +237,19 @@ export const getClassReport = async (req, res) => {
           student: student,
           status: record.status,
           checkInTime: record.checkInTime,
+          
+          // --- NEW: SEND FOCUS SCORE ---
+          focusScore: record.focusScore || 0, // Default to 0 if missing
+          
       } : {
           _id: null,
           student: student,
           status: 'absent',
+          focusScore: 0,
       };
     });
+
+// ... rest of the function
 
     res.status(200).json({
       status: 'success',
@@ -257,4 +266,43 @@ export const verifyByCamera = async (req, res) => {
     // This logic is now mostly handled in checkIn, 
     // but kept here if you have a dedicated camera device setup.
     res.status(200).json({ message: "Use check-in endpoint for app verification." });
+};
+
+// ... existing imports
+
+// NEW: Update Focus Score (Called continuously or at end of class)
+export const updateFocusScore = async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const { classId, score, status } = req.body;
+    const today = new Date().setHours(0, 0, 0, 0);
+
+    // Prepare update object
+    const updateData = { 
+      focusScore: score 
+    };
+
+    // Only log if they are distracted to save space
+    if (status && status.includes('Distracted') || status.includes('Drowsy')) {
+      // We use $push to add to the array history
+      // We use $set to update the current score
+      await AttendanceRecord.findOneAndUpdate(
+        { student: studentId, class: classId, date: { $gte: today } },
+        { 
+          $set: { focusScore: score },
+          $push: { attentionLogs: { time: new Date(), status: status } }
+        }
+      );
+    } else {
+      // Just update the score
+      await AttendanceRecord.findOneAndUpdate(
+        { student: studentId, class: classId, date: { $gte: today } },
+        { $set: { focusScore: score } }
+      );
+    }
+
+    res.status(200).json({ status: 'success' });
+  } catch (err) {
+    res.status(400).json({ status: 'fail', message: err.message });
+  }
 };

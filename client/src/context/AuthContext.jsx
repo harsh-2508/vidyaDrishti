@@ -39,14 +39,18 @@ export const AuthProvider = ({ children }) => {
       setToken(token);
       localStorage.setItem('token', token);
 
-      // 3. Fetch user data
+      // 3. Fetch user data IMMEDIATELY so we know the role
       const userResponse = await api.get('/auth/me');
-      setUser(userResponse.data.data.user);
+      const userData = userResponse.data.data.user;
       
-      return true;
+      setUser(userData);
+      
+      // 4. Return the ROLE so the Login component knows where to redirect
+      return { success: true, role: userData.role }; 
+
     } catch (error) {
       console.error('Login failed:', error);
-      return false;
+      return { success: false, error: error.response?.data?.message || 'Login failed' };
     }
   };
 

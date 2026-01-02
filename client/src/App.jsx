@@ -1,119 +1,112 @@
-import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
-import Login from "./components/Login.jsx";
-import StudentDashboard from "./components/StudentDashboard.jsx"; // Make sure this is imported
-import TeacherDashboard from "./components/TeacherDashboard.jsx";
-import { useAuth } from "./hooks/useAuth.jsx";
-import Profile from "./components/Profile.jsx";
+import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
+import Login from './components/Login.jsx';
+import StudentDashboard from './components/StudentDashboard.jsx';
+import TeacherDashboard from './components/TeacherDashboard.jsx'; 
+// Import Profile if you created it, otherwise comment this out
+import Profile from './components/Profile.jsx'; 
+import { useAuth } from './hooks/useAuth.jsx';
 
-// 1. Protected Route Component
+// --- PROTECTED ROUTE (Requires Login) ---
 function ProtectedRoute({ children, allowedRole }) {
   const { user, token, isLoading } = useAuth();
 
-  // If we are still checking the token, show a loading text
+  // 1. Still loading? Show spinner
   if (isLoading) {
-    return (
-      <div style={{ textAlign: "center", marginTop: "50px" }}>
-        Loading User Data...
-      </div>
-    );
+    return <div style={{textAlign: 'center', marginTop: '50px', color: '#666'}}>Loading User Data...</div>;
   }
 
-  // If no token or no user, go to login
-  if (!token || !user) {
+  // 2. Not logged in? Go to login
+  if (!token) {
     return <Navigate to="/login" replace />;
   }
 
-  // If role doesn't match, show warning
+  // 3. Logged in but User Data missing? (Safety Net)
+  if (!user) {
+    return <div style={{textAlign: 'center', marginTop: '50px', color: '#666'}}>Authenticating...</div>;
+  }
+
+  // 4. Role Check
   if (allowedRole && user.role !== allowedRole) {
-    return <div>Access Denied. You are logged in as a {user.role}.</div>;
+    // Redirect to their correct dashboard if they are in the wrong place
+    if (user.role === 'teacher') return <Navigate to="/dashboard" replace />;
+    if (user.role === 'student') return <Navigate to="/check-in" replace />;
   }
 
   return children;
 }
 
-// ... imports
+// --- PUBLIC ROUTE (Only for Guests) ---
+// This fixes the "Redirect Race Condition" on the login page
+function PublicRoute({ children }) {
+  const { user, token, isLoading } = useAuth();
+
+  if (isLoading) return <div>Loading...</div>;
+
+  // If logged in, force them to their dashboard immediately
+  if (token && user) {
+    if (user.role === 'teacher') return <Navigate to="/dashboard" replace />;
+    if (user.role === 'student') return <Navigate to="/check-in" replace />;
+  }
+
+  return children;
+}
 
 function App() {
   const { user, token, logout, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div style={{ textAlign: "center", marginTop: "50px" }}>
-        Loading Application...
-      </div>
-    );
+    return <div style={{textAlign: 'center', marginTop: '50px'}}>Loading Application...</div>;
   }
 
   return (
     <BrowserRouter>
-      {/* REMOVED .app-container and .content-card wrappers */}
-
-      {/* Optional: Simple Nav for testing, can be removed since Dashboard has its own sidebar */}
-      {/* {token && (
-        <nav style={{position: 'absolute', top: 10, right: 10, zIndex: 9999}}>
-           <button onClick={logout}>Logout (Debug)</button>
-        </nav>
-      )} 
-      */}
-
       <Routes>
-        {/* Public Route */}
-        <Route
-          path="/login"
+        
+        {/* --- LOGIN ROUTE (Use PublicRoute Wrapper) --- */}
+        <Route 
+          path="/login" 
           element={
-            !token ? (
+            <PublicRoute>
               <Login />
-            ) : (
-              <Navigate
-                to={user?.role === "teacher" ? "/dashboard" : "/check-in"}
-              />
-            )
-          }
+            </PublicRoute>
+          } 
         />
 
-        {/* Teacher Route */}
-        <Route
-          path="/dashboard"
+        {/* --- TEACHER DASHBOARD --- */}
+        <Route 
+          path="/dashboard" 
           element={
             <ProtectedRoute allowedRole="teacher">
               <TeacherDashboard />
             </ProtectedRoute>
-          }
+          } 
         />
 
-        {/* Student Route */}
-        <Route
-          path="/check-in"
+        {/* --- STUDENT PORTAL --- */}
+        <Route 
+          path="/check-in" 
           element={
             <ProtectedRoute allowedRole="student">
               <StudentDashboard />
             </ProtectedRoute>
-          }
+          } 
         />
 
-        {/* Default Redirect */}
-        <Route
-          path="*"
-          element={
-            <Navigate
-              to={
-                token
-                  ? user?.role === "teacher"
-                    ? "/dashboard"
-                    : "/check-in"
-                  : "/login"
-              }
-            />
-          }
-        />
-
-        <Route
-          path="/profile"
+        {/* --- STUDENT PROFILE --- */}
+        <Route 
+          path="/profile" 
           element={
             <ProtectedRoute allowedRole="student">
-              <Profile />
+              <Profile /> 
             </ProtectedRoute>
-          }
+          } 
+        />
+
+        {/* --- ROOT/DEFAULT --- */}
+        {/* If token exists, let PublicRoute/ProtectedRoute handle it. If not, go to login. */}
+        <Route 
+          path="*" 
+          element={ <Navigate to="/login" replace /> } 
         />
       </Routes>
     </BrowserRouter>

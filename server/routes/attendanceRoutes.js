@@ -9,7 +9,8 @@ import {
   getClassReport,
   manualMarkAttendance, // <-- Import new function
   getStudentStats,
-  getStudentClassHistory
+  getStudentClassHistory,
+  updateFocusScore
 } from '../controllers/attendanceController.js';
 
 // You also need to import the auth middleware
@@ -33,6 +34,9 @@ router.get('/stats', restrictTo('student'), getStudentStats);
 
 // NEW ROUTE: Get details for a specific class
 router.get('/history/:classId', restrictTo('student'), getStudentClassHistory);
+
+// NEW ROUTE
+router.patch('/focus', restrictTo('student'), updateFocusScore);
 
 // Use 'export default'
 export default router;
