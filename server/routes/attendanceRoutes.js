@@ -1,42 +1,28 @@
-// routes/attendanceRoutes.js
-
 import express from 'express';
-// Import the specific functions you exported from the controller
-// ... imports ...
 import {
   checkIn,
-  verifyByCamera,
   getClassReport,
-  manualMarkAttendance, // <-- Import new function
+  updateAttendanceStatus, // The new function
   getStudentStats,
-  getStudentClassHistory,
-  updateFocusScore
+  updateFocusScore,
+  getStudentHistoryForTeacher
 } from '../controllers/attendanceController.js';
-
-// You also need to import the auth middleware
-import { protect, restrictTo } from '../controllers/authController.js'; // Make sure to add .js
+import { protect, restrictTo } from '../controllers/authController.js';
 
 const router = express.Router();
 
-// Protect all routes
-router.use(protect);
+router.use(protect); // All routes require login
 
-// Use the imported functions
+// Student Routes
 router.post('/check-in', restrictTo('student'), checkIn);
+router.get('/stats', restrictTo('student'), getStudentStats);
+router.patch('/focus', restrictTo('student'), updateFocusScore);
+router.get('/student-history', restrictTo('teacher'), getStudentHistoryForTeacher);
 
-router.post('/verify-camera', restrictTo('teacher'), verifyByCamera);
-
+// Teacher Routes
 router.get('/report/:classId', restrictTo('teacher'), getClassReport);
 
-// ... other routes ...
-router.post('/mark', restrictTo('teacher'), manualMarkAttendance); // <-- Add this route
-router.get('/stats', restrictTo('student'), getStudentStats);
+// ✅ THIS IS THE FIX: The frontend calls /update, so we need this route.
+router.patch('/update', restrictTo('teacher'), updateAttendanceStatus);
 
-// NEW ROUTE: Get details for a specific class
-router.get('/history/:classId', restrictTo('student'), getStudentClassHistory);
-
-// NEW ROUTE
-router.patch('/focus', restrictTo('student'), updateFocusScore);
-
-// Use 'export default'
 export default router;

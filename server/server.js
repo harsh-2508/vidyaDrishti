@@ -1,30 +1,44 @@
 import express from "express";
 import cors from "cors";
 import 'dotenv/config';
-// import cookieParser from "cookie-parser"; // <-- Not needed for our strategy
 import connectDB from "./config/mongodb.js";
 
-// Import all your routers
-import authRouter from "./routes/authRoutes.js";
-import classRouter from "./routes/classRoutes.js"; // <-- ADD THIS
+// Existing routers
+import authRouter       from "./routes/authRoutes.js";
+import classRouter      from "./routes/classRoutes.js";
 import attendanceRouter from "./routes/attendanceRoutes.js";
+import financeRouter    from './routes/financeRoutes.js';
+import shikshaRouter    from './routes/shikshaRoutes.js';
 
-const app = express();
+// Dropout prediction routers
+import predictionRoutes from "./routes/predictions.js";
+import studentRoutes    from "./routes/students.js";
+
+const app  = express();
 const port = process.env.PORT || 4000;
 connectDB();
 
 // --- Middleware ---
-app.use(express.json()); // For parsing application/json
-app.use(cors()); // Enable CORS for all routes
-// app.use(cookieParser()); // <-- Not needed
+app.use(express.json());
+app.use(cors());
 
 // --- API Endpoints ---
 app.get('/', (req, res) => res.send("API working"));
 
-// Use the new routes you defined
-app.use('/api/auth', authRouter);
-app.use('/api/classes', classRouter); // <-- ADD THIS
+// Existing routes
+app.use('/api/auth',       authRouter);
+app.use('/api/classes',    classRouter);
 app.use('/api/attendance', attendanceRouter);
+app.use('/api/finance',    financeRouter);
+app.use('/api/shiksha',    shikshaRouter);
+
+// Dropout prediction routes
+app.use("/api/predictions", predictionRoutes);
+app.use("/api/students",    studentRoutes);
+
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", service: "dropout-backend" });
+});
 
 // --- Server Start ---
 app.listen(port, () => {

@@ -1,25 +1,30 @@
-// controllers/classController.js
-
 import Class from '../models/ClassModel.js';
-import Location from '../models/LocationModel.js';
+// We do NOT need LocationModel anymore because we embedded the location in ClassModel
 
-// Use 'export const' instead of 'exports.createClass'
 export const createClass = async (req, res) => {
   try {
-    // 1. Create the location first
-    const newLocation = await Location.create({
-      roomName: req.body.roomName,
-      latitude: req.body.latitude,
-      longitude: req.body.longitude,
-      radius: req.body.radius,
-    });
+    const { className, classCode, roomName, latitude, longitude, radius } = req.body;
 
-    // 2. Create the class, linking the location and teacher
+    // 1. Validate Input
+    if (!roomName || !latitude || !longitude) {
+      return res.status(400).json({ 
+        status: 'fail', 
+        message: 'Please provide Room Name and allow Location Access.' 
+      });
+    }
+
+    // 2. Create the Class with GeoJSON Location
     const newClass = await Class.create({
-      className: req.body.className,
-      classCode: req.body.classCode,
-      teacher: req.user.id, // from protect middleware
-      location: newLocation._id,
+      className,
+      classCode,
+      roomName, // ✅ Pass roomName explicitly
+      teacher: req.user.id, // Assigned from the logged-in user
+      radius: radius || 25,
+      // ✅ FIX: Construct the GeoJSON object here
+      location: {
+        type: 'Point',
+        coordinates: [parseFloat(longitude), parseFloat(latitude)] // Note: MongoDB uses [Lon, Lat] order
+      }
     });
 
     res.status(201).json({
@@ -29,103 +34,81 @@ export const createClass = async (req, res) => {
       },
     });
   } catch (err) {
+    // Better Error Handling for Duplicate Keys (like Class Code)
+    if (err.code === 11000) {
+      return res.status(400).json({ status: 'fail', message: 'Class Code already exists!' });
+    }
     res.status(400).json({ status: 'fail', message: err.message });
   }
 };
 
-// Use 'export const'
 export const joinClass = async (req, res) => {
   try {
     const { classCode } = req.body;
     const studentId = req.user.id;
 
+    // Add student to the class list (prevent duplicates with $addToSet)
     const classToJoin = await Class.findOneAndUpdate(
       { classCode: classCode },
-      { $addToSet: { students: studentId } }, // $addToSet prevents duplicates
+      { $addToSet: { students: studentId } },
       { new: true }
     );
 
     if (!classToJoin) {
-      return res
-        .status(404)
-        .json({ status: 'fail', message: 'Class code not found' });
+      return res.status(404).json({ status: 'fail', message: 'Class code not found' });
     }
 
     res.status(200).json({
       status: 'success',
       message: 'Successfully joined class',
-      data: {
-        class: classToJoin,
-      },
+      data: { class: classToJoin },
     });
   } catch (err) {
     res.status(400).json({ status: 'fail', message: err.message });
   }
 };
 
-// Use 'export const'
 export const getMyClasses = async (req, res) => {
   try {
     let classes;
+    // Return classes based on Role
     if (req.user.role === 'teacher') {
-      classes = await Class.find({ teacher: req.user.id }).populate('location');
+      classes = await Class.find({ teacher: req.user.id });
     } else {
-      classes = await Class.find({ students: req.user.id }).populate(
-        'location'
-      );
+      classes = await Class.find({ students: req.user.id });
     }
 
     res.status(200).json({
       status: 'success',
       results: classes.length,
-      data: {
-        classes,
-      },
+      data: { classes },
     });
   } catch (err) {
     res.status(400).json({ status: 'fail', message: err.message });
   }
 };
 
-// ... existing imports
-
-// Update a class (e.g., to add a schedule)
 export const updateClass = async (req, res) => {
   try {
-    // 1. Find the class
     const classToUpdate = await Class.findById(req.params.id);
 
     if (!classToUpdate) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'No class found with that ID',
-      });
+      return res.status(404).json({ status: 'fail', message: 'No class found' });
     }
 
-    // 2. SECURITY CHECK: Ensure the logged-in user is the teacher of this class
-    // We compare the ID string values
+    // Security: Only the owner teacher can edit
     if (classToUpdate.teacher.toString() !== req.user.id) {
-      return res.status(403).json({
-        status: 'fail',
-        message: 'You do not have permission to edit this class.',
-      });
+      return res.status(403).json({ status: 'fail', message: 'Permission denied.' });
     }
 
-    // 3. Update the class
-    const updatedClass = await Class.findByIdAndUpdate(
-      req.params.id,
-      req.body, 
-      {
-        new: true, // Return the updated document
-        runValidators: true, // Ensure data format is correct
-      }
-    );
+    const updatedClass = await Class.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
     res.status(200).json({
       status: 'success',
-      data: {
-        class: updatedClass,
-      },
+      data: { class: updatedClass },
     });
   } catch (err) {
     res.status(400).json({ status: 'fail', message: err.message });

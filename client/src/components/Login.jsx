@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useNavigate } from 'react-router-dom';
+import './Login.css'; // Ensure you have basic CSS
 
 function Login() {
-  const [email, setEmail] = useState('john@student.com'); 
+  const [email, setEmail] = useState('amit@school.com'); // Default for easy testing
   const [password, setPassword] = useState('password123');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -16,58 +17,57 @@ function Login() {
     setIsLoading(true);
     setError('');
 
-    // 1. Call login and wait for the result
-    const result = await login(email, password);
-    
-    if (result.success) {
-      // 2. Check Role and Navigate Explicitly
-      if (result.role === 'teacher') {
-        navigate('/dashboard'); // Go straight to Teacher Dashboard
+    try {
+      const result = await login(email, password);
+      
+      if (result.success) {
+        // Explicit Navigation based on Role
+        if (result.role === 'teacher') {
+          navigate('/dashboard');
+        } else {
+          navigate('/check-in');
+        }
       } else {
-        navigate('/check-in');  // Go straight to Student Portal
+        setError(result.error || 'Login failed');
       }
-    } else {
-      setError(result.error);
+    } catch (err) {
+      setError('An unexpected error occurred.');
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (
-    <div className="auth-wrapper">
-      <div className="auth-card">
+    <div className="auth-wrapper" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f4f6f8'}}>
+      <div className="auth-card" style={{background: 'white', padding: '40px', borderRadius: '10px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px'}}>
         <form onSubmit={handleSubmit}>
-          <h2 style={{textAlign: 'center', marginBottom: '20px', color: '#333'}}>
-            VidyaDrishti Login
-          </h2>
+          <h2 style={{textAlign: 'center', marginBottom: '20px', color: '#2c3e50'}}>VidyaDrishti Login</h2>
           
-          <div className="input-group">
-            <label htmlFor="email">Email</label>
+          <div style={{marginBottom: '15px'}}>
+            <label style={{display: 'block', marginBottom: '5px', fontWeight: 'bold'}}>Email</label>
             <input
-              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
               required
+              style={{width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ddd'}}
             />
           </div>
 
-          <div className="input-group">
-            <label htmlFor="password">Password</label>
+          <div style={{marginBottom: '20px'}}>
+            <label style={{display: 'block', marginBottom: '5px', fontWeight: 'bold'}}>Password</label>
             <input
-              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
               required
+              style={{width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ddd'}}
             />
           </div>
 
-          {error && <p style={{color: 'red', fontSize: '14px', textAlign: 'center'}}>{error}</p>}
+          {error && <p style={{color: '#e74c3c', fontSize: '14px', textAlign: 'center', marginBottom: '15px'}}>{error}</p>}
 
-          <button type="submit" className="primary-btn" disabled={isLoading}>
+          <button type="submit" disabled={isLoading} style={{width: '100%', padding: '12px', background: '#3498db', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold'}}>
             {isLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>

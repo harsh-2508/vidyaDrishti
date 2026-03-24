@@ -3,41 +3,60 @@ import mongoose from 'mongoose';
 const classSchema = new mongoose.Schema({
   className: {
     type: String,
-    required: true,
+    required: [true, 'Class name is required']
   },
   classCode: {
     type: String,
-    required: true,
     unique: true,
+    required: [true, 'Class code is required']
   },
   teacher: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
-    required: true,
+    required: [true, 'Class must belong to a teacher']
   },
+  roomName: {
+    type: String,
+    required: true
+  },
+  // ⚠️ THIS WAS THE ISSUE. IT MUST BE A GEOJSON OBJECT, NOT AN ID.
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'], 
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true
+    }
+  },
+  radius: {
+    type: Number,
+    default: 25 // meters
+  },
+  schedule: [
+    {
+      day: String,
+      startTime: String,
+      endTime: String,
+      room: String
+    }
+  ],
   students: [
     {
       type: mongoose.Schema.ObjectId,
-      ref: 'User',
-    },
+      ref: 'User'
+    }
   ],
-  location: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Location',
-    required: true,
-  },
-  // --- NEW: Schedule Field ---
-  schedule: [{
-    day: {
-      type: String,
-      enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-      required: true
-    },
-    startTime: { type: String, required: true }, // e.g., "10:00"
-    endTime: { type: String, required: true },   // e.g., "11:00"
-    room: { type: String } // e.g., "Lab 4"
-  }]
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 });
+
+// Create a Geospatial Index so we can search "Near Me"
+classSchema.index({ location: '2dsphere' });
 
 const Class = mongoose.model('Class', classSchema);
 export default Class;
