@@ -21,7 +21,7 @@ connectDB();
 // --- Middleware ---
 app.use(express.json());
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'https://vidya-drishti.vercel.app', // Uses Vercel URL in prod
+  origin:[ 'http://localhost:5173', 'http://vidya-drishti.vercel.app'], // Uses Vercel URL in prod
   credentials: true // Important if you use cookies/sessions
 }));
 
