@@ -21,7 +21,7 @@ connectDB();
 // --- Middleware ---
 app.use(express.json());
 app.use(cors({
-  origin:[ 'http://localhost:5173', 'https://vidya-drishti-hltnttr9z-harshvardhan-singh-thakurs-projects.vercel.app'], // Uses Vercel URL in prod
+  origin:[ 'http://localhost:5173', 'https://vidya-drishti-hltnttr9z-harshvardhan-singh-thakurs-projects.vercel.app/login'], // Uses Vercel URL in prod
   credentials: true // Important if you use cookies/sessions
 }));
 
