@@ -144,6 +144,13 @@ def predict_batch():
         return jsonify({"error": str(e)}), 500
 
 
+# if __name__ == "__main__":
+#     print("🚀  Flask ML API running on http://localhost:5001")
+#     app.run(port=5001, debug=True)
+
 if __name__ == "__main__":
-    print("🚀  Flask ML API running on http://localhost:5001")
-    app.run(port=5001, debug=True)
+    # Get port from environment variable, default to 5001 for local testing
+    port = int(os.environ.get("PORT", 5001))
+    print(f"🚀 Flask ML API running on port {port}")
+    # Host="0.0.0.0" is REQUIRED for cloud deployment
+    app.run(host="0.0.0.0", port=port, debug=False)

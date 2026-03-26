@@ -20,7 +20,10 @@ connectDB();
 
 // --- Middleware ---
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173', // Uses Vercel URL in prod
+  credentials: true // Important if you use cookies/sessions
+}));
 
 // --- API Endpoints ---
 app.get('/', (req, res) => res.send("API working"));

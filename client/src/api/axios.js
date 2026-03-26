@@ -1,8 +1,13 @@
 import axios from 'axios';
 
-// 1. Set the base URL for all requests
+// // 1. Set the base URL for all requests
+// const api = axios.create({
+//   baseURL: 'http://localhost:4000/api', // Your backend URL
+// });
+
 const api = axios.create({
-  baseURL: 'http://localhost:4000/api', // Your backend URL
+  baseURL: import.meta.env.VITE_API_URL, 
+  withCredentials: true 
 });
 
 // 2. The magic: An interceptor to add the token to every request
