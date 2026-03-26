@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(cors({
   origin: [
     'http://localhost:5173', 
-    'https://vidya-drishti-hltnttr9z-harshvardhan-singh-thakurs-projects.vercel.app' // 👈 Removed "/login"
+    'https://vidya-drishti.vercel.app' // Use your clean, production domain
   ], 
   credentials: true 
 }));
