@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(cors({
   origin: [
     'http://localhost:5173', 
-    'https://vidya-drishti.vercel.app/api' // Use your clean, production domain
+    'https://vidya-drishti.vercel.app' // Use your clean, production domain
   ], 
   credentials: true 
 }));
