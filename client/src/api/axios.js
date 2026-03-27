@@ -6,9 +6,10 @@ import axios from 'axios';
 // });
 
 const api = axios.create({
-  baseURL: "https://vidyadrishti-1.onrender.com/api", 
+  baseURL: import.meta.env.VITE_API_URL, 
   withCredentials: true 
 });
+
 
 // 2. The magic: An interceptor to add the token to every request
 api.interceptors.request.use(
