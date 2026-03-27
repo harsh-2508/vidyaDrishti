@@ -6,7 +6,7 @@ import axios from 'axios';
 // });
 
 const api = axios.create({
-  baseURL: "https://vidyadrishti-1.onrender.com", 
+  baseURL: "https://vidyadrishti-1.onrender.com/api", 
   withCredentials: true 
 });
 
