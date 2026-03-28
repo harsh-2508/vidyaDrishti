@@ -50,9 +50,3 @@ In many remote villages across India, the infrastructure for education exists, b
 - Node.js (v18+)
 - MongoDB Atlas Account
 
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone [https://github.com/yourusername/vidyadrishti.git](https://github.com/yourusername/vidyadrishti.git)
-   cd vidyadrishti
